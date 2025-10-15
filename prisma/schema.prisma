@@ -1,0 +1,43 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Record {
+  id              String   @id @default(cuid())
+  forest_station  String
+  officer_name    String
+  activity_type   String
+  activity_date   DateTime
+  status          String   @default("Pending")
+  txHash          String?
+  timestamp       DateTime @default(now())
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // One-to-one with Verification
+  verification    Verification?
+}
+
+model Verification {
+  id                  String   @id @default(cuid())
+  permit_id           String   @unique
+  forest_station      String
+  officer_name        String
+  activity_type       String
+  activity_date       DateTime
+  permit_number       String
+  txHash              String?
+  timestamp           DateTime @default(now())
+  verification_status String   @default("Pending")
+  createdAt           DateTime @default(now())
+
+  // Relation back to Record (one-to-one)
+  record   Record?   @relation(fields: [recordId], references: [id])
+  recordId String?   @unique
+}
