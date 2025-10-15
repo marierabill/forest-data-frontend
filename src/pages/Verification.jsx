@@ -1,52 +1,58 @@
-import React, { useState } from 'react'
-import { verifyByTxHash } from '../api/mockApi'
+import React, { useState } from "react";
+import { verifyPermit } from "../api/mockApi";
 
-export default function Verification(){
-  const [tx, setTx] = useState('')
-  const [result, setResult] = useState(null)
-  const [loading, setLoading] = useState(false)
+export default function Verification() {
+  const [permitId, setPermitId] = useState("");
+  const [result, setResult] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   const handleVerify = async (e) => {
-    e && e.preventDefault()
-    setLoading(true)
-    const res = await verifyByTxHash(tx.trim())
-    setLoading(false)
-    setResult(res)
-  }
-
-  // quick sample QR-simulate button that fills tx with latest stored tx
-  const loadLatest = () => {
-    const records = JSON.parse(localStorage.getItem('bfdi_records_v1') || '[]')
-    if (records.length) setTx(records[0].txHash)
-  }
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const res = await verifyPermit(permitId);
+      setResult(res);
+    } catch (err) {
+      setResult({ status: "error", message: err.message });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <div className="max-w-2xl bg-white p-6 rounded shadow space-y-4">
-      <h2 className="text-lg font-semibold">Permit / Transaction Verification</h2>
-
-      <div className="space-y-2">
-        <button onClick={loadLatest} className="px-3 py-1 bg-slate-100 border rounded text-sm">Load latest tx (simulate QR)</button>
-      </div>
-
+    <div className="p-6">
+      <h2 className="text-xl font-bold mb-4">Permit Verification</h2>
       <form onSubmit={handleVerify} className="flex gap-2">
-        <input value={tx} onChange={e=>setTx(e.target.value)} placeholder="Enter transaction hash or scan QR" className="flex-1 border p-2 rounded" />
-        <button type="submit" className="px-3 py-2 bg-blue-600 text-white rounded" disabled={loading}>
-          {loading ? 'Checking…' : 'Verify'}
+        <input
+          type="text"
+          value={permitId}
+          onChange={(e) => setPermitId(e.target.value)}
+          placeholder="Enter Permit ID"
+          className="border p-2 rounded w-full"
+        />
+        <button
+          type="submit"
+          className="bg-green-600 text-white px-4 rounded"
+          disabled={loading}
+        >
+          {loading ? "Verifying..." : "Verify"}
         </button>
       </form>
 
-      <div>
-        {result == null ? <div className="text-sm text-slate-500">Enter tx hash to verify.</div> : (
-          result.success ? (
-            <div className="p-3 bg-slate-50 rounded">
-              <div className="text-sm text-slate-600">Found:</div>
-              <pre className="text-xs mt-2">{JSON.stringify(result.data, null, 2)}</pre>
-            </div>
-          ) : (
-            <div className="text-red-600">Not found</div>
-          )
-        )}
-      </div>
+      {result && (
+        <div className="mt-4 p-3 border rounded bg-gray-50">
+          <p><strong>Status:</strong> {result.status}</p>
+          <p><strong>Message:</strong> {result.message}</p>
+          {result.data && (
+            <>
+              <p><strong>Station:</strong> {result.data.forest_station}</p>
+              <p><strong>Officer:</strong> {result.data.officer_name}</p>
+              <p><strong>TxHash:</strong> {result.data.txHash}</p>
+              <p><strong>Verification:</strong> {result.data.verification_status}</p>
+            </>
+          )}
+        </div>
+      )}
     </div>
-  )
+  );
 }

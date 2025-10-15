@@ -1,23 +1,10 @@
-// placeholder - do NOT commit live keys here.
-// Once ready, replace with:
-// import { createClient } from '@supabase/supabase-js'
-// export const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
+import { createClient } from "@supabase/supabase-js";
 
-export const auth = {
-  currentUser: null,
-  async signIn({ email, password }) {
-    // simulate network latency
-    await new Promise(r => setTimeout(r, 500))
-    // naive "auth" for prototype
-    this.currentUser = { id: 'user-1', email }
-    return { data: this.currentUser, error: null }
-  },
-  async signOut() {
-    await new Promise(r => setTimeout(r, 200))
-    this.currentUser = null
-    return { error: null }
-  },
-  user() {
-    return this.currentUser
-  }
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error("Supabase environment variables are missing!");
 }
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);
